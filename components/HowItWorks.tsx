@@ -4,28 +4,28 @@ export default function HowItWorks() {
   const steps = [
     {
       num: '01',
-      title: 'Pick a Block',
-      desc: 'Browse the 12 scarce positions on the board. Banners and Marquee spots provide maximum prominence.',
+      title: 'Choose a Placement',
+      desc: 'Pick an open unit or an occupied spot. Starting base prices are $5 for Small, $10 for Medium, and $25 for Large.',
     },
     {
       num: '02',
-      title: 'Bid and Upload Logo',
-      desc: 'Enter your brand, link, upload your logo, and pay a 20% deposit via Polar (cards, Apple Pay, Google Pay).',
+      title: 'Enter Name & Link',
+      desc: 'Type your website or X handle. Your logo is automatically fetched and placed on the billboard.',
     },
     {
       num: '03',
-      title: 'Anti-Sniping Engine',
-      desc: 'Any bid in the final 10 minutes automatically extends the timer by 10 minutes to guarantee fair competition.',
+      title: '+70% Takeover Rule',
+      desc: 'To take over an occupied spot, pay the fixed +70% upgraded price. All payments are fixed and non-refundable.',
     },
     {
       num: '04',
-      title: 'Outbid Protection',
-      desc: 'If someone outbids you, you get an instant email alert to counter-bid. If you pass, your deposit is refunded.',
+      title: 'Instant Outbid Alert',
+      desc: 'If another brand takes over your spot with the upgraded price, you receive an instant email alert to reclaim it.',
     },
   ];
 
   return (
-    <section id="how" className="scroll-mt-16 py-16 bg-white border-t border-zinc-200">
+    <section id="how" className="scroll-mt-16 py-14 bg-white border-t border-zinc-200">
       <div className="mx-auto max-w-4xl px-4 sm:px-6">
         <div className="mb-8">
           <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-600">

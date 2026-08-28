@@ -10,8 +10,11 @@ interface BidHistoryProps {
 export default function BidHistory({ bids }: BidHistoryProps) {
   const [activeTab, setActiveTab] = useState<'leaderboard' | 'recent'>('leaderboard');
 
-  const topBids = [...bids].sort((a, b) => b.amount - a.amount);
-  const recentBids = [...bids].sort(
+  // Only verified paid bids appear on the public leaderboard
+  const confirmedBids = bids.filter((b) => b.status === 'paid');
+
+  const topBids = [...confirmedBids].sort((a, b) => b.amount - a.amount);
+  const recentBids = [...confirmedBids].sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
 
@@ -37,7 +40,7 @@ export default function BidHistory({ bids }: BidHistoryProps) {
           <div className="flex rounded-lg border border-zinc-200 bg-white p-1 text-xs font-mono self-start sm:self-auto shadow-sm">
             <button
               onClick={() => setActiveTab('leaderboard')}
-              className={`rounded px-3 py-1 transition-all ${
+              className={`rounded px-3 py-1 transition-all cursor-pointer ${
                 activeTab === 'leaderboard'
                   ? 'bg-black text-white font-bold shadow-sm'
                   : 'text-zinc-500 hover:text-black'
@@ -47,13 +50,13 @@ export default function BidHistory({ bids }: BidHistoryProps) {
             </button>
             <button
               onClick={() => setActiveTab('recent')}
-              className={`rounded px-3 py-1 transition-all ${
+              className={`rounded px-3 py-1 transition-all cursor-pointer ${
                 activeTab === 'recent'
                   ? 'bg-black text-white font-bold shadow-sm'
                   : 'text-zinc-500 hover:text-black'
               }`}
             >
-              RECENT ({bids.length})
+              RECENT ({confirmedBids.length})
             </button>
           </div>
         </div>
@@ -61,7 +64,7 @@ export default function BidHistory({ bids }: BidHistoryProps) {
         {/* Table View */}
         {displayBids.length === 0 ? (
           <div className="rounded-xl border border-zinc-200 bg-white p-8 text-center text-xs font-mono text-zinc-400 shadow-sm">
-            [ NO BIDS RECORDED YET. BE THE FIRST TO CLAIM A SPOT. ]
+            [ NO VERIFIED BIDS RECORDED YET. BE THE FIRST TO CLAIM A SPOT. ]
           </div>
         ) : (
           <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
@@ -89,7 +92,7 @@ export default function BidHistory({ bids }: BidHistoryProps) {
                               href={bid.bidder_url}
                               target="_blank"
                               rel="noreferrer"
-                              className="text-[11px] font-mono text-blue-600 hover:underline transition-colors"
+                              className="text-[11px] font-mono text-blue-600 hover:underline transition-colors cursor-pointer"
                             >
                               ↗
                             </a>

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSpot, createBid, updateSpot, uploadLogo, getAuctionConfig, updateAuctionConfig } from '@/lib/supabase';
 import { createPolarCheckout } from '@/lib/polar';
-import { checkAntiSnipe, calculateDeposit } from '@/lib/anti-snipe';
+import { checkAntiSnipe } from '@/lib/anti-snipe';
 import { sendBidConfirmation, sendOutbidNotification } from '@/lib/resend';
 import { getAutoLogoUrl } from '@/lib/logo';
+import { getNextSpotPriceCents } from '@/lib/pricing';
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,11 +13,10 @@ export async function POST(req: NextRequest) {
     const bidderName = formData.get('bidder_name') as string;
     const bidderEmail = formData.get('bidder_email') as string;
     const bidderUrl = (formData.get('bidder_url') as string) || null;
-    const amount = Number(formData.get('amount')); // in cents
     const logoFile = formData.get('logo') as File | null;
     const clientAutoLogo = formData.get('auto_logo_url') as string | null;
 
-    if (!spotId || !bidderName || !bidderEmail || !amount) {
+    if (!spotId || !bidderName || !bidderEmail) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -25,14 +25,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Spot not found' }, { status: 404 });
     }
 
-    // Min bid validation ($5 increment if already taken)
-    const minRequired = spot.current_bid > 0 ? spot.current_bid + 500 : spot.min_bid;
-    if (amount < minRequired) {
-      return NextResponse.json(
-        { error: `Bid must be at least $${(minRequired / 100).toFixed(2)}` },
-        { status: 400 }
-      );
-    }
+    // Exact BrandMyMac fixed price (+70% takeover or base price)
+    const exactRequiredCents = getNextSpotPriceCents(spot);
 
     // Determine Logo: Uploaded File > Auto-detected Logo > Existing Spot Logo
     let logoUrl: string | null = spot.logo_url;
@@ -49,16 +43,13 @@ export async function POST(req: NextRequest) {
       logoUrl = getAutoLogoUrl(bidderUrl) || spot.logo_url;
     }
 
-    const config = await getAuctionConfig();
-    const depositAmount = calculateDeposit(amount, config);
-
-    // Create Bid record
+    // Create Bid record with exact fixed price
     const bid = await createBid({
       spot_id: spotId,
       bidder_name: bidderName,
       bidder_email: bidderEmail,
       bidder_url: bidderUrl,
-      amount,
+      amount: exactRequiredCents,
       logo_path: logoUrl,
       status: 'pending',
       stripe_session_id: null,
@@ -67,12 +58,12 @@ export async function POST(req: NextRequest) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const successUrl = `${appUrl}/success?spot_id=${spotId}&bid_id=${bid.id}`;
 
-    // 1. Polar Checkout (Primary gateway for India + Worldwide)
+    // 1. Polar Checkout (Full Fixed Payment - Non-refundable)
     if (process.env.POLAR_ACCESS_TOKEN) {
       const polarUrl = await createPolarCheckout({
         bidId: bid.id,
         spotLabel: `Spot #${spot.id} (${spot.label.replace(/—|–/g, '/')})`,
-        amount: depositAmount,
+        amount: exactRequiredCents,
         bidderEmail,
         successUrl,
       });
@@ -84,7 +75,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 2. Direct Mock Mode (If no Polar key provided)
+    // 2. Direct Mock Mode
     const oldBidder = {
       email: spot.bidder_email,
       name: spot.bidder_name,
@@ -92,7 +83,7 @@ export async function POST(req: NextRequest) {
     };
 
     await updateSpot(spotId, {
-      current_bid: amount,
+      current_bid: exactRequiredCents,
       bidder_name: bidderName,
       bidder_email: bidderEmail,
       bidder_url: bidderUrl,
@@ -100,8 +91,9 @@ export async function POST(req: NextRequest) {
       bid_count: spot.bid_count + 1,
     });
 
+    const config = await getAuctionConfig();
     await updateAuctionConfig({
-      total_raised: config.total_raised + amount - spot.current_bid,
+      total_raised: config.total_raised + exactRequiredCents - spot.current_bid,
     });
 
     await checkAntiSnipe();
@@ -111,7 +103,7 @@ export async function POST(req: NextRequest) {
       email: bidderEmail,
       name: bidderName,
       spotLabel: spot.label.replace(/—|–/g, '/'),
-      amount,
+      amount: exactRequiredCents,
     });
 
     // Send outbid alert if someone was replaced
@@ -121,7 +113,7 @@ export async function POST(req: NextRequest) {
         name: oldBidder.name,
         spotLabel: spot.label.replace(/—|–/g, '/'),
         oldAmount: oldBidder.amount,
-        newAmount: amount,
+        newAmount: exactRequiredCents,
         newBidderName: bidderName,
       });
     }

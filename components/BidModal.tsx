@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Spot, formatCurrency } from '@/lib/types';
-import { calculateDeposit } from '@/lib/anti-snipe';
 import { getAutoLogoUrl } from '@/lib/logo';
+import { getNextSpotPriceDollars } from '@/lib/pricing';
 
 interface BidModalProps {
   spot: Spot;
@@ -12,11 +12,10 @@ interface BidModalProps {
 }
 
 export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
-  const minBidDollars = spot.current_bid > 0
-    ? (spot.current_bid / 100) + 5
-    : spot.min_bid / 100;
+  // BrandMyMac +70% Upgrade Mechanic: Fixed non-editable price
+  const requiredPriceDollars = getNextSpotPriceDollars(spot);
+  const isTaken = spot.current_bid > 0;
 
-  const [bidAmount, setBidAmount] = useState<number>(minBidDollars);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [url, setUrl] = useState('');
@@ -27,7 +26,14 @@ export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const depositDollars = calculateDeposit(bidAmount * 100, { deposit_pct: 0.20, min_deposit: 200 }) / 100;
+  // Close on ESC key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   // Auto-detect logo as user types URL or brand/handle
   useEffect(() => {
@@ -60,11 +66,6 @@ export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
     e.preventDefault();
     setError(null);
 
-    if (bidAmount < minBidDollars) {
-      setError(`Minimum bid for this spot is $${minBidDollars}`);
-      return;
-    }
-
     if (!name.trim()) {
       setError('Please enter your brand or project name');
       return;
@@ -83,7 +84,7 @@ export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
       formData.append('bidder_name', name);
       formData.append('bidder_email', email);
       formData.append('bidder_url', url);
-      formData.append('amount', Math.round(bidAmount * 100).toString());
+      formData.append('amount', Math.round(requiredPriceDollars * 100).toString());
       
       if (logoFile) {
         formData.append('logo', logoFile);
@@ -116,16 +117,22 @@ export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
     }
   };
 
-  // Clean label without em-dashes
   const cleanLabel = spot.label.replace(/—|–/g, '/');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="relative w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl text-left">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs cursor-pointer animate-fadeIn"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl text-left cursor-default animate-scaleUp"
+      >
         {/* Close Button */}
         <button
+          type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 font-mono text-zinc-400 hover:text-black transition-colors text-xs"
+          className="absolute right-4 top-4 font-mono text-zinc-400 hover:text-black transition-colors text-xs cursor-pointer"
         >
           [ESC]
         </button>
@@ -139,15 +146,17 @@ export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
           
           <div className="mt-3 grid grid-cols-2 gap-2 rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 font-mono text-xs">
             <div>
-              <div className="text-zinc-500">CURRENT BID</div>
-              <div className="font-bold text-zinc-900">
-                {spot.current_bid > 0 ? formatCurrency(spot.current_bid) : 'NONE'}
+              <div className="text-zinc-500">CURRENT OWNER</div>
+              <div className="font-bold text-zinc-900 truncate">
+                {isTaken ? `${spot.bidder_name} (${formatCurrency(spot.current_bid)})` : 'NONE (OPEN)'}
               </div>
             </div>
             <div>
-              <div className="text-zinc-500">MIN. TO OUTBID</div>
+              <div className="text-zinc-500">
+                {isTaken ? '+70% TAKEOVER' : 'FIXED PRICE'}
+              </div>
               <div className="font-bold text-emerald-600">
-                ${minBidDollars}
+                ${requiredPriceDollars} USD
               </div>
             </div>
           </div>
@@ -161,23 +170,23 @@ export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
 
         {/* Bid Form */}
         <form onSubmit={handleSubmit} className="space-y-3.5">
-          <div>
-            <label className="block text-xs font-mono text-zinc-600">TOTAL BID AMOUNT (USD)</label>
-            <div className="relative mt-1">
-              <span className="absolute left-3 top-2 text-zinc-400 font-mono">$</span>
-              <input
-                type="number"
-                min={minBidDollars}
-                step="1"
-                value={bidAmount}
-                onChange={(e) => setBidAmount(Number(e.target.value))}
-                className="w-full rounded-lg border border-zinc-300 bg-white py-2 pl-7 pr-3 font-mono text-sm text-zinc-900 focus:border-black focus:outline-none shadow-sm"
-                required
-              />
+          {/* Locked Fixed Price Display */}
+          <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-3 flex items-center justify-between">
+            <div>
+              <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-wide">
+                {isTaken ? 'Spot Takeover Fee (+70%)' : 'Initial Placement Fee'}
+              </div>
+              <div className="text-xl font-mono font-extrabold text-zinc-950">
+                ${requiredPriceDollars} <span className="text-xs font-normal text-zinc-500">USD</span>
+              </div>
             </div>
-            <div className="mt-1 flex justify-between text-[11px] font-mono text-zinc-500">
-              <span>20% DEPOSIT: <strong className="text-zinc-900">${depositDollars.toFixed(2)}</strong></span>
-              <span>REFUNDED IF OUTBID</span>
+            <div className="text-right">
+              <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider ${
+                isTaken ? 'bg-rose-100 text-rose-800' : 'bg-zinc-200/80 text-zinc-800'
+              }`}>
+                {isTaken ? '+70% TAKEOVER' : 'LOCKED FIXED PRICE'}
+              </span>
+              <div className="text-[10px] font-mono text-zinc-400 mt-0.5">Non-refundable</div>
             </div>
           </div>
 
@@ -245,7 +254,7 @@ export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
               <button
                 type="button"
                 onClick={() => setShowManualUpload(!showManualUpload)}
-                className="text-[11px] font-mono text-emerald-800 underline shrink-0 hover:text-emerald-950 ml-2"
+                className="text-[11px] font-mono text-emerald-800 underline shrink-0 hover:text-emerald-950 ml-2 cursor-pointer"
               >
                 {showManualUpload ? 'Keep auto' : 'Upload custom'}
               </button>
@@ -255,7 +264,7 @@ export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
               <button
                 type="button"
                 onClick={() => setShowManualUpload(!showManualUpload)}
-                className="text-[11px] font-mono text-zinc-500 underline hover:text-black"
+                className="text-[11px] font-mono text-zinc-500 underline hover:text-black cursor-pointer"
               >
                 {showManualUpload ? 'Hide file upload' : '+ Upload logo manually (optional)'}
               </button>
@@ -264,7 +273,7 @@ export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
 
           {/* Optional Manual File Upload */}
           {showManualUpload && (
-            <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 animate-fadeIn">
+            <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-2.5">
               <label className="block text-[11px] font-mono text-zinc-600 mb-1">
                 UPLOAD CUSTOM LOGO (PNG/SVG/JPG)
               </label>
@@ -281,12 +290,18 @@ export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-black py-2.5 text-center text-xs font-bold font-mono text-white shadow-md hover:bg-zinc-800 transition-all disabled:opacity-50 active:scale-95"
+              className={`w-full rounded-lg py-2.5 text-center text-xs font-bold font-mono text-white shadow-md transition-all disabled:opacity-50 active:scale-95 cursor-pointer ${
+                isTaken ? 'bg-rose-600 hover:bg-rose-500' : 'bg-black hover:bg-zinc-800'
+              }`}
             >
-              {loading ? 'PROCESSING...' : `PROCEED TO PAY $${depositDollars.toFixed(2)} DEPOSIT >`}
+              {loading
+                ? 'PROCESSING...'
+                : isTaken
+                ? `TAKE OVER SPOT FOR $${requiredPriceDollars} >`
+                : `PROCEED TO PAY $${requiredPriceDollars} >`}
             </button>
             <div className="mt-2 text-center text-[10px] font-mono text-zinc-400">
-              Powered by Polar (MoR) / Direct Bank and Card Checkout
+              Fixed · Non-refundable · Powered by Polar (MoR)
             </div>
           </div>
         </form>

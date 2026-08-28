@@ -1,7 +1,5 @@
 -- ============================================================
--- SpotBid Supabase Schema
--- Run this in your Supabase SQL Editor: 
--- https://supabase.com/dashboard/project/zefapapyaqyhvzecdtra/sql
+-- SpotBid Supabase Schema (17 Billboard Units)
 -- ============================================================
 
 -- 1. Create spots table
@@ -66,25 +64,25 @@ CREATE POLICY "Public config view" ON public.auction_config FOR SELECT USING (tr
 CREATE POLICY "Public config update" ON public.auction_config FOR UPDATE USING (true);
 CREATE POLICY "Public config insert" ON public.auction_config FOR INSERT WITH CHECK (true);
 
--- 5. Insert initial Auction Config
-INSERT INTO public.auction_config (id, ends_at, anti_snipe_mins, deposit_pct, min_deposit, funding_goal, total_raised)
-VALUES (1, NOW() + INTERVAL '7 days', 10, 0.20, 200, 100000, 0)
-ON CONFLICT (id) DO NOTHING;
-
--- 6. Seed the 12 Spots
+-- 5. Seed 17 Billboard Spots
 INSERT INTO public.spots (id, label, description, tier, grid_col, grid_row, min_bid) VALUES
   (1, 'Top Left Banner', 'Large · Premium visibility', 'large', '1 / span 2', 1, 2500),
-  (2, 'Marquee — Top Center', 'Large · Maximum exposure', 'large', '3 / span 2', 1, 2500),
+  (2, 'Marquee / Top Center', 'Large · Maximum exposure', 'large', '3 / span 2', 1, 2500),
   (3, 'Top Right Banner', 'Large · Premium visibility', 'large', '5 / span 2', 1, 2500),
-  (4, 'Left of Logo', 'Small · Next to SpotBid logo', 'small', '1 / span 1', 2, 500),
-  (5, 'Inner Left', 'Small · Premium logo-adjacent', 'small', '2 / span 1', 2, 500),
-  (6, 'Inner Right', 'Small · Premium logo-adjacent', 'small', '5 / span 1', 2, 500),
-  (7, 'Right of Logo', 'Small · Next to SpotBid logo', 'small', '6 / span 1', 2, 500),
-  (8, 'Bottom Left', 'Medium · Solid visibility', 'medium', '1 / span 2', 3, 1000),
-  (9, 'Bottom Center', 'Medium · Under the logo', 'medium', '3 / span 2', 3, 1000),
-  (10, 'Bottom Right', 'Medium · Solid visibility', 'medium', '5 / span 2', 3, 1000),
-  (11, 'Footer Wide', 'Medium · Wide banner spot', 'medium', '1 / span 4', 4, 1000),
-  (12, 'Footer Right', 'Medium · Compact spot', 'medium', '5 / span 2', 4, 1000)
+  (4, 'Upper Left', 'Small · High engagement', 'small', '1 / span 1', 2, 500),
+  (5, 'Inner Left', 'Small · High engagement', 'small', '2 / span 1', 2, 500),
+  (6, 'Billboard Center Stage', 'Center Stage · Prime billboard anchor', 'large', '3 / span 2', 2, 5000),
+  (7, 'Inner Right', 'Small · High engagement', 'small', '5 / span 1', 2, 500),
+  (8, 'Upper Right', 'Small · High engagement', 'small', '6 / span 1', 2, 500),
+  (9, 'Mid Spot A', 'Small · Fast entry placement', 'small', '1 / span 1', 3, 500),
+  (10, 'Mid Spot B', 'Small · Fast entry placement', 'small', '2 / span 1', 3, 500),
+  (11, 'Mid Spot C', 'Small · Fast entry placement', 'small', '3 / span 1', 3, 500),
+  (12, 'Mid Spot D', 'Small · Fast entry placement', 'small', '4 / span 1', 3, 500),
+  (13, 'Mid Spot E', 'Small · Fast entry placement', 'small', '5 / span 1', 3, 500),
+  (14, 'Mid Spot F', 'Small · Fast entry placement', 'small', '6 / span 1', 3, 500),
+  (15, 'Footer Banner Left', 'Medium · High engagement', 'medium', '1 / span 2', 4, 1000),
+  (16, 'Footer Banner Center', 'Medium · Central billboard spot', 'medium', '3 / span 2', 4, 1000),
+  (17, 'Footer Banner Right', 'Medium · High engagement', 'medium', '5 / span 2', 4, 1000)
 ON CONFLICT (id) DO UPDATE SET
   label = EXCLUDED.label,
   description = EXCLUDED.description,
@@ -92,11 +90,3 @@ ON CONFLICT (id) DO UPDATE SET
   grid_col = EXCLUDED.grid_col,
   grid_row = EXCLUDED.grid_row,
   min_bid = EXCLUDED.min_bid;
-
--- 7. Create Storage Bucket for Logos (if not already created)
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('logos', 'logos', true)
-ON CONFLICT (id) DO NOTHING;
-
-CREATE POLICY "Public Access to Logos" ON storage.objects FOR SELECT USING (bucket_id = 'logos');
-CREATE POLICY "Public Upload to Logos" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'logos');
