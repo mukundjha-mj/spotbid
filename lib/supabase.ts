@@ -3,12 +3,6 @@ import { Spot, Bid, AuctionConfig, SPOT_SEEDS } from './types';
 // ============================================================
 // Mock Supabase Client
 // ============================================================
-// This provides a working data layer without requiring a real
-// Supabase account. Replace with real Supabase when ready by
-// setting NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY
-// in .env.local.
-// ============================================================
-
 const USE_REAL_SUPABASE = !!(
   process.env.NEXT_PUBLIC_SUPABASE_URL &&
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -33,15 +27,14 @@ let bidIdCounter = 1;
 
 let auctionConfig: AuctionConfig = {
   id: 1,
-  ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+  ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
   anti_snipe_mins: 10,
   deposit_pct: 0.20,
-  min_deposit: 200, // $2 in cents
-  funding_goal: 100000, // $1,000 goal in cents
+  min_deposit: 200,
+  funding_goal: 100000,
   total_raised: 0,
 };
 
-// Real Supabase client (only if keys are provided)
 let supabaseClient: any = null;
 
 async function getSupabase(): Promise<any> {
@@ -113,6 +106,16 @@ export async function createBid(bid: Omit<Bid, 'id' | 'created_at'>): Promise<Bi
   return newBid;
 }
 
+export async function getBid(id: number): Promise<Bid | null> {
+  const sb = await getSupabase();
+  if (sb) {
+    const { data, error } = await sb.from('bids').select('*').eq('id', id).single();
+    if (error) return null;
+    return data as Bid;
+  }
+  return bids.find((b) => b.id === id) || null;
+}
+
 export async function updateBid(id: number, updates: Partial<Bid>): Promise<Bid | null> {
   const sb = await getSupabase();
   if (sb) {
@@ -124,6 +127,10 @@ export async function updateBid(id: number, updates: Partial<Bid>): Promise<Bid 
   if (idx === -1) return null;
   bids[idx] = { ...bids[idx], ...updates };
   return bids[idx];
+}
+
+export async function updateBidStatus(id: number, status: 'pending' | 'paid' | 'outbid' | 'refunded'): Promise<Bid | null> {
+  return updateBid(id, { status });
 }
 
 export async function getBids(): Promise<Bid[]> {
@@ -144,20 +151,6 @@ export async function getBids(): Promise<Bid[]> {
     const spot = spots.find((s) => s.id === b.spot_id);
     return { ...b, spot_label: spot?.label, spot_tier: spot?.tier };
   }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-}
-
-export async function getBidByStripeSession(sessionId: string): Promise<Bid | null> {
-  const sb = await getSupabase();
-  if (sb) {
-    const { data, error } = await sb
-      .from('bids')
-      .select('*')
-      .eq('stripe_session_id', sessionId)
-      .single();
-    if (error) return null;
-    return data as Bid;
-  }
-  return bids.find((b) => b.stripe_session_id === sessionId) || null;
 }
 
 export async function getAuctionConfig(): Promise<AuctionConfig> {
@@ -186,7 +179,7 @@ export async function updateAuctionConfig(updates: Partial<AuctionConfig>): Prom
   return auctionConfig;
 }
 
-// Upload logo — returns a URL
+// Upload logo - returns a URL
 export async function uploadLogo(file: File, spotId: number): Promise<string> {
   const sb = await getSupabase();
   if (sb) {
@@ -197,6 +190,5 @@ export async function uploadLogo(file: File, spotId: number): Promise<string> {
     const { data } = sb.storage.from('logos').getPublicUrl(path);
     return data.publicUrl;
   }
-  // Mock: create object URL (only works in browser)
   return URL.createObjectURL(file);
 }

@@ -301,7 +301,7 @@ export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
                 : `PROCEED TO PAY $${requiredPriceDollars} >`}
             </button>
             <div className="mt-2 text-center text-[10px] font-mono text-zinc-400">
-              Fixed · Non-refundable · Powered by Polar (MoR)
+              Fixed · Non-refundable · Direct Card and Apple Pay Checkout
             </div>
           </div>
         </form>

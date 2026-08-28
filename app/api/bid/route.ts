@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSpot, createBid, updateSpot, uploadLogo, getAuctionConfig, updateAuctionConfig } from '@/lib/supabase';
+import { createDodoPayment } from '@/lib/dodo';
 import { createPolarCheckout } from '@/lib/polar';
 import { checkAntiSnipe } from '@/lib/anti-snipe';
 import { sendBidConfirmation, sendOutbidNotification } from '@/lib/resend';
@@ -58,7 +59,25 @@ export async function POST(req: NextRequest) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const successUrl = `${appUrl}/success?spot_id=${spotId}&bid_id=${bid.id}`;
 
-    // 1. Polar Checkout (Full Fixed Payment - Non-refundable)
+    // 1. Primary: Dodo Payments (Global Cards, Apple Pay, Indian INR direct bank settlement)
+    if (process.env.DODO_PAYMENTS_API_KEY) {
+      const paymentUrl = await createDodoPayment({
+        bidId: bid.id,
+        spotLabel: `Spot #${spot.id} (${spot.label.replace(/—|–/g, '/')})`,
+        amountCents: exactRequiredCents,
+        bidderEmail,
+        bidderName,
+        successUrl,
+      });
+
+      return NextResponse.json({
+        success: true,
+        bid,
+        checkout_url: paymentUrl,
+      });
+    }
+
+    // 2. Secondary: Polar Checkout (if configured)
     if (process.env.POLAR_ACCESS_TOKEN) {
       const polarUrl = await createPolarCheckout({
         bidId: bid.id,
@@ -75,7 +94,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 2. Direct Mock Mode
+    // 3. Fallback: Direct Mock Mode (Instant placement for testing)
     const oldBidder = {
       email: spot.bidder_email,
       name: spot.bidder_name,
