@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Spot, formatCurrency } from '@/lib/types';
 import { calculateDeposit } from '@/lib/anti-snipe';
+import { getAutoLogoUrl } from '@/lib/logo';
 
 interface BidModalProps {
   spot: Spot;
@@ -19,12 +20,27 @@ export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [url, setUrl] = useState('');
+  const [autoLogo, setAutoLogo] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [customPreview, setCustomPreview] = useState<string | null>(null);
+  const [showManualUpload, setShowManualUpload] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const depositDollars = calculateDeposit(bidAmount * 100, { deposit_pct: 0.20, min_deposit: 200 }) / 100;
+
+  // Auto-detect logo as user types URL or brand/handle
+  useEffect(() => {
+    if (url.trim()) {
+      const detected = getAutoLogoUrl(url);
+      setAutoLogo(detected);
+    } else if (name.trim() && (name.includes('.') || name.startsWith('@'))) {
+      const detected = getAutoLogoUrl(name);
+      setAutoLogo(detected);
+    } else {
+      setAutoLogo(null);
+    }
+  }, [url, name]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -32,11 +48,13 @@ export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
       setLogoFile(file);
       const reader = new FileReader();
       reader.onload = () => {
-        setLogoPreview(reader.result as string);
+        setCustomPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
   };
+
+  const activeLogoUrl = customPreview || autoLogo;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,8 +84,11 @@ export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
       formData.append('bidder_email', email);
       formData.append('bidder_url', url);
       formData.append('amount', Math.round(bidAmount * 100).toString());
+      
       if (logoFile) {
         formData.append('logo', logoFile);
+      } else if (autoLogo) {
+        formData.append('auto_logo_url', autoLogo);
       }
 
       const res = await fetch('/api/bid', {
@@ -95,6 +116,9 @@ export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
     }
   };
 
+  // Clean label without em-dashes
+  const cleanLabel = spot.label.replace(/—|–/g, '/');
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
       <div className="relative w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl text-left">
@@ -111,7 +135,7 @@ export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
           <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-600">
             SPOT #{spot.id.toString().padStart(2, '0')} / {spot.tier} TIER
           </div>
-          <h2 className="text-xl font-bold text-zinc-950 mt-0.5">{spot.label}</h2>
+          <h2 className="text-xl font-bold text-zinc-950 mt-0.5">{cleanLabel}</h2>
           
           <div className="mt-3 grid grid-cols-2 gap-2 rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 font-mono text-xs">
             <div>
@@ -182,33 +206,76 @@ export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
             </div>
           </div>
 
+          {/* Website / X Profile (Auto-Logo Source) */}
           <div>
-            <label className="block text-xs font-mono text-zinc-600">WEBSITE URL</label>
+            <label className="block text-xs font-mono text-zinc-600">
+              WEBSITE OR X (TWITTER) HANDLE
+            </label>
             <input
-              type="url"
-              placeholder="https://acme.ai"
+              type="text"
+              placeholder="e.g. acme.ai or @acme or x.com/acme"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-black focus:outline-none shadow-sm"
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-mono text-zinc-600">LOGO (PNG/SVG/JPG)</label>
-            <div className="mt-1 flex items-center gap-2.5">
+          {/* Live Auto-Fetched Logo Preview */}
+          {activeLogoUrl ? (
+            <div className="flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50/70 p-2.5">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-emerald-300 bg-white p-1 shadow-xs">
+                  <img
+                    src={activeLogoUrl}
+                    alt="Logo Preview"
+                    className="max-h-full max-w-full object-contain rounded"
+                    onError={() => setAutoLogo(null)}
+                  />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-emerald-900 flex items-center gap-1">
+                    <span>✓</span> Logo Auto-Fetched
+                  </div>
+                  <div className="text-[10px] font-mono text-emerald-700 truncate">
+                    Ready to place on the board
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowManualUpload(!showManualUpload)}
+                className="text-[11px] font-mono text-emerald-800 underline shrink-0 hover:text-emerald-950 ml-2"
+              >
+                {showManualUpload ? 'Keep auto' : 'Upload custom'}
+              </button>
+            </div>
+          ) : (
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={() => setShowManualUpload(!showManualUpload)}
+                className="text-[11px] font-mono text-zinc-500 underline hover:text-black"
+              >
+                {showManualUpload ? 'Hide file upload' : '+ Upload logo manually (optional)'}
+              </button>
+            </div>
+          )}
+
+          {/* Optional Manual File Upload */}
+          {showManualUpload && (
+            <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-2.5 animate-fadeIn">
+              <label className="block text-[11px] font-mono text-zinc-600 mb-1">
+                UPLOAD CUSTOM LOGO (PNG/SVG/JPG)
+              </label>
               <input
                 type="file"
                 accept="image/*"
                 onChange={handleFileChange}
-                className="block w-full text-xs text-zinc-500 file:mr-2.5 file:rounded file:border-0 file:bg-zinc-100 file:px-2.5 file:py-1 file:text-xs file:font-mono file:text-zinc-800 hover:file:bg-zinc-200 cursor-pointer"
+                className="block w-full text-xs text-zinc-500 file:mr-2.5 file:rounded file:border-0 file:bg-white file:border-zinc-200 file:px-2.5 file:py-1 file:text-xs file:font-mono file:text-zinc-800 hover:file:bg-zinc-100 cursor-pointer"
               />
-              {logoPreview && (
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded border border-zinc-200 bg-zinc-50 p-1">
-                  <img src={logoPreview} alt="Preview" className="max-h-full max-w-full object-contain" />
-                </div>
-              )}
             </div>
-          </div>
+          )}
 
           <div className="pt-2">
             <button

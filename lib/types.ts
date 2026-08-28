@@ -31,7 +31,6 @@ export interface Bid {
   status: BidStatus;
   stripe_session_id: string | null;
   created_at: string;
-  // Joined fields
   spot_label?: string;
   spot_tier?: SpotTier;
 }
@@ -57,23 +56,22 @@ export interface SpotSeed {
 }
 
 export const SPOT_SEEDS: SpotSeed[] = [
-  // Row 1 — Large spots ($25 min)
+  // Row 1 - Large spots ($25 min)
   { id: 1, label: 'Top Left Banner', description: 'Large · Premium visibility', tier: 'large', grid_col: '1 / span 2', grid_row: 1, min_bid: 2500 },
-  { id: 2, label: 'Marquee — Top Center', description: 'Large · Maximum exposure', tier: 'large', grid_col: '3 / span 2', grid_row: 1, min_bid: 2500 },
+  { id: 2, label: 'Marquee / Top Center', description: 'Large · Maximum exposure', tier: 'large', grid_col: '3 / span 2', grid_row: 1, min_bid: 2500 },
   { id: 3, label: 'Top Right Banner', description: 'Large · Premium visibility', tier: 'large', grid_col: '5 / span 2', grid_row: 1, min_bid: 2500 },
-  // Row 2 — Small spots around logo ($5 min)
+  // Row 2 - Small spots around logo ($5 min)
   { id: 4, label: 'Left of Logo', description: 'Small · Next to SpotBid logo', tier: 'small', grid_col: '1 / span 1', grid_row: 2, min_bid: 500 },
   { id: 5, label: 'Inner Left', description: 'Small · Premium logo-adjacent', tier: 'small', grid_col: '2 / span 1', grid_row: 2, min_bid: 500 },
-  // Spot 6 & 7 on the right of the center logo
   { id: 6, label: 'Inner Right', description: 'Small · Premium logo-adjacent', tier: 'small', grid_col: '5 / span 1', grid_row: 2, min_bid: 500 },
   { id: 7, label: 'Right of Logo', description: 'Small · Next to SpotBid logo', tier: 'small', grid_col: '6 / span 1', grid_row: 2, min_bid: 500 },
-  // Row 3 — Medium spots ($10 min)
+  // Row 3 - Medium spots ($10 min)
   { id: 8, label: 'Bottom Left', description: 'Medium · Solid visibility', tier: 'medium', grid_col: '1 / span 2', grid_row: 3, min_bid: 1000 },
   { id: 9, label: 'Bottom Center', description: 'Medium · Under the logo', tier: 'medium', grid_col: '3 / span 2', grid_row: 3, min_bid: 1000 },
   { id: 10, label: 'Bottom Right', description: 'Medium · Solid visibility', tier: 'medium', grid_col: '5 / span 2', grid_row: 3, min_bid: 1000 },
-  // Row 4 — Medium spots ($10 min)
-  { id: 11, label: 'Footer Wide', description: 'Medium · Wide banner spot', tier: 'medium', grid_col: '1 / span 4', grid_row: 4, min_bid: 1000 },
-  { id: 12, label: 'Footer Right', description: 'Medium · Compact spot', tier: 'medium', grid_col: '5 / span 2', grid_row: 4, min_bid: 1000 },
+  // Row 4 - Medium spots ($10 min)
+  { id: 11, label: 'Footer Wide A', description: 'Medium · Wide banner spot', tier: 'medium', grid_col: '1 / span 3', grid_row: 4, min_bid: 1000 },
+  { id: 12, label: 'Footer Wide B', description: 'Medium · Wide banner spot', tier: 'medium', grid_col: '4 / span 3', grid_row: 4, min_bid: 1000 },
 ];
 
 export function formatCurrency(cents: number): string {

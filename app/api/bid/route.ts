@@ -3,6 +3,7 @@ import { getSpot, createBid, updateSpot, uploadLogo, getAuctionConfig, updateAuc
 import { createPolarCheckout } from '@/lib/polar';
 import { checkAntiSnipe, calculateDeposit } from '@/lib/anti-snipe';
 import { sendBidConfirmation, sendOutbidNotification } from '@/lib/resend';
+import { getAutoLogoUrl } from '@/lib/logo';
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,6 +14,7 @@ export async function POST(req: NextRequest) {
     const bidderUrl = (formData.get('bidder_url') as string) || null;
     const amount = Number(formData.get('amount')); // in cents
     const logoFile = formData.get('logo') as File | null;
+    const clientAutoLogo = formData.get('auto_logo_url') as string | null;
 
     if (!spotId || !bidderName || !bidderEmail || !amount) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -32,13 +34,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Determine Logo: Uploaded File > Auto-detected Logo > Existing Spot Logo
     let logoUrl: string | null = spot.logo_url;
+
     if (logoFile && logoFile.size > 0) {
       try {
         logoUrl = await uploadLogo(logoFile, spotId);
       } catch (err) {
         console.warn('Logo upload failed, using fallback', err);
       }
+    } else if (clientAutoLogo) {
+      logoUrl = clientAutoLogo;
+    } else if (bidderUrl) {
+      logoUrl = getAutoLogoUrl(bidderUrl) || spot.logo_url;
     }
 
     const config = await getAuctionConfig();
@@ -63,7 +71,7 @@ export async function POST(req: NextRequest) {
     if (process.env.POLAR_ACCESS_TOKEN) {
       const polarUrl = await createPolarCheckout({
         bidId: bid.id,
-        spotLabel: `Spot #${spot.id} (${spot.label})`,
+        spotLabel: `Spot #${spot.id} (${spot.label.replace(/—|–/g, '/')})`,
         amount: depositAmount,
         bidderEmail,
         successUrl,
@@ -102,7 +110,7 @@ export async function POST(req: NextRequest) {
     await sendBidConfirmation({
       email: bidderEmail,
       name: bidderName,
-      spotLabel: spot.label,
+      spotLabel: spot.label.replace(/—|–/g, '/'),
       amount,
     });
 
@@ -111,7 +119,7 @@ export async function POST(req: NextRequest) {
       await sendOutbidNotification({
         email: oldBidder.email,
         name: oldBidder.name,
-        spotLabel: spot.label,
+        spotLabel: spot.label.replace(/—|–/g, '/'),
         oldAmount: oldBidder.amount,
         newAmount: amount,
         newBidderName: bidderName,

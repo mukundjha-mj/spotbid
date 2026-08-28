@@ -6,13 +6,15 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 border-b border-zinc-200 bg-white/90 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
-        {/* Brand */}
-        <Link href="/" className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-black text-white font-black text-xs shadow-sm">
-            SB
-          </div>
-          <span className="font-bold text-sm tracking-tight text-zinc-900 flex items-center gap-1">
-            spotbid<span className="text-zinc-400 font-mono font-normal text-xs">.top</span>
+        {/* Transparent Brand Logo */}
+        <Link href="/" className="flex items-center gap-2 group">
+          <svg viewBox="0 0 28 28" fill="none" className="h-6 w-6 transition-transform group-hover:scale-105">
+            <rect x="2" y="14" width="4.5" height="11" rx="1.5" fill="#a1a1aa" />
+            <rect x="11.5" y="8" width="4.5" height="17" rx="1.5" fill="#09090b" />
+            <rect x="21" y="2" width="4.5" height="23" rx="1.5" fill="#10b981" />
+          </svg>
+          <span className="font-black text-base tracking-tight text-zinc-950 flex items-center gap-0.5">
+            spotbid<span className="text-zinc-400 font-mono font-medium text-xs">.top</span>
           </span>
         </Link>
 
