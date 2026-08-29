@@ -20,19 +20,24 @@ export async function createDodoPayment({
   const apiKey = process.env.DODO_PAYMENTS_API_KEY;
 
   if (!apiKey) {
-    throw new Error('DODO_PAYMENTS_API_KEY is not configured in .env.local');
+    throw new Error('DODO_PAYMENTS_API_KEY is not configured in environment variables');
   }
 
-  const environment = process.env.DODO_PAYMENTS_ENVIRONMENT === 'live_mode' || apiKey.startsWith('live_')
-    ? 'live_mode'
-    : 'test_mode';
+  const environment =
+    process.env.DODO_PAYMENTS_ENVIRONMENT === 'live_mode' || apiKey.startsWith('live_')
+      ? 'live_mode'
+      : 'test_mode';
 
   const dodo = new DodoPayments({
     bearerToken: apiKey,
     environment,
   });
 
-  const productId = process.env.DODO_PRODUCT_ID || 'pdt_0NmPEQWW87OD0lwuxpgTx';
+  const productId = process.env.DODO_PRODUCT_ID;
+
+  if (!productId) {
+    throw new Error('DODO_PRODUCT_ID is not configured in environment variables');
+  }
 
   const payment = await dodo.payments.create({
     billing: {
