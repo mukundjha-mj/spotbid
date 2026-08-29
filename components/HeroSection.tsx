@@ -20,6 +20,14 @@ export default function HeroSection({
 }: HeroSectionProps) {
   const pct = fundingGoal > 0 ? Math.round((totalRaised / fundingGoal) * 100) : 0;
 
+  const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <header className="relative mx-auto max-w-4xl px-4 pt-14 pb-10 text-center sm:px-6 md:pt-18">
       {/* Top Banner Tag */}
@@ -73,12 +81,14 @@ export default function HeroSection({
       <div className="mt-7 flex items-center justify-center gap-3">
         <a
           href="#board"
+          onClick={(e) => handleScroll(e, 'board')}
           className="rounded-lg bg-black px-6 py-2.5 text-sm font-semibold text-white transition-all hover:bg-zinc-800 active:scale-95 shadow-md"
         >
           View The Board ↓
         </a>
         <a
           href="#leaderboard"
+          onClick={(e) => handleScroll(e, 'leaderboard')}
           className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 hover:text-black transition-colors shadow-sm"
         >
           Leaderboard

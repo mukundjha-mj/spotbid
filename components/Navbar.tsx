@@ -3,6 +3,14 @@
 import Link from 'next/link';
 
 export default function Navbar() {
+  const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <nav className="sticky top-0 z-50 border-b border-zinc-200 bg-white/90 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
@@ -20,16 +28,32 @@ export default function Navbar() {
 
         {/* Links */}
         <div className="hidden items-center gap-6 text-xs font-mono text-zinc-500 md:flex">
-          <a href="#board" className="hover:text-black transition-colors">
+          <a
+            href="#board"
+            onClick={(e) => handleScroll(e, 'board')}
+            className="hover:text-black transition-colors"
+          >
             [board]
           </a>
-          <a href="#leaderboard" className="hover:text-black transition-colors">
+          <a
+            href="#leaderboard"
+            onClick={(e) => handleScroll(e, 'leaderboard')}
+            className="hover:text-black transition-colors"
+          >
             [leaderboard]
           </a>
-          <a href="#how" className="hover:text-black transition-colors">
+          <a
+            href="#how"
+            onClick={(e) => handleScroll(e, 'how')}
+            className="hover:text-black transition-colors"
+          >
             [how-it-works]
           </a>
-          <a href="#faq" className="hover:text-black transition-colors">
+          <a
+            href="#faq"
+            onClick={(e) => handleScroll(e, 'faq')}
+            className="hover:text-black transition-colors"
+          >
             [faq]
           </a>
         </div>
@@ -46,6 +70,7 @@ export default function Navbar() {
 
           <a
             href="#board"
+            onClick={(e) => handleScroll(e, 'board')}
             className="rounded-lg bg-black px-3.5 py-1.5 text-xs font-semibold text-white transition-all hover:bg-zinc-800 active:scale-95 shadow-sm"
           >
             Claim Spot

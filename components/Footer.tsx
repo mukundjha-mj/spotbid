@@ -1,6 +1,16 @@
+'use client';
+
 import Link from 'next/link';
 
 export default function Footer() {
+  const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <footer className="border-t border-zinc-200 bg-white py-10 text-xs font-mono text-zinc-500">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -16,16 +26,32 @@ export default function Footer() {
         </div>
 
         <div className="flex items-center gap-6">
-          <a href="#board" className="hover:text-black transition-colors">
+          <a
+            href="#board"
+            onClick={(e) => handleScroll(e, 'board')}
+            className="hover:text-black transition-colors"
+          >
             board
           </a>
-          <a href="#leaderboard" className="hover:text-black transition-colors">
+          <a
+            href="#leaderboard"
+            onClick={(e) => handleScroll(e, 'leaderboard')}
+            className="hover:text-black transition-colors"
+          >
             leaderboard
           </a>
-          <a href="#how" className="hover:text-black transition-colors">
+          <a
+            href="#how"
+            onClick={(e) => handleScroll(e, 'how')}
+            className="hover:text-black transition-colors"
+          >
             how-it-works
           </a>
-          <a href="#faq" className="hover:text-black transition-colors">
+          <a
+            href="#faq"
+            onClick={(e) => handleScroll(e, 'faq')}
+            className="hover:text-black transition-colors"
+          >
             faq
           </a>
         </div>
