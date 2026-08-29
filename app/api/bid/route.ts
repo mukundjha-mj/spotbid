@@ -73,11 +73,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: any) {
     console.error('[Bid API Error]:', error);
-
-    // Return clean user-friendly customer messages without leaking code/env names
-    return NextResponse.json(
-      { error: 'Payment gateway temporarily unavailable. Please try again in a moment.' },
-      { status: 500 }
-    );
+    const msg = error?.message || 'Payment initiation failed. Please check gateway configuration.';
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
