@@ -106,11 +106,36 @@ export default function BidHistory({ bids }: BidHistoryProps) {
                       </div>
                     </div>
 
-                    <div className="text-right shrink-0">
-                      <div className="font-mono font-bold text-emerald-600 text-sm sm:text-base tabular-nums">
-                        {formatCurrency(bid.amount)}
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div className="text-right">
+                        <div className="font-mono font-bold text-emerald-600 text-sm sm:text-base tabular-nums">
+                          {formatCurrency(bid.amount)}
+                        </div>
+                        <div className="text-[10px] font-mono text-zinc-400">{timeAgo}</div>
                       </div>
-                      <div className="text-[10px] font-mono text-zinc-400">{timeAgo}</div>
+
+                      {/* Share on X Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const rankText = activeTab === 'leaderboard' ? `Rank #${index + 1}` : 'Live Placement';
+                          const tweetText = encodeURIComponent(
+                            `🏆 ${rankText}: ${bid.bidder_name} is holding Spot #${bid.spot_id} for ${formatCurrency(bid.amount)} on spotbid.top!\n\nCheck the live billboard & claim your spot:`
+                          );
+                          const appUrl = encodeURIComponent(window.location.origin);
+                          window.open(
+                            `https://twitter.com/intent/tweet?text=${tweetText}&url=${appUrl}`,
+                            '_blank',
+                            'noopener,noreferrer'
+                          );
+                        }}
+                        title="Share on X"
+                        className="cursor-pointer flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg border border-zinc-200 bg-white text-zinc-600 hover:border-black hover:bg-black hover:text-white shadow-2xs transition-all active:scale-95 ml-1"
+                      >
+                        <svg className="h-3 w-3 sm:h-3.5 sm:w-3.5 fill-current" viewBox="0 0 24 24">
+                          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
                 );
