@@ -14,9 +14,10 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SpotBid | Bid to rank. Get seen. The Public Attention Billboard",
+  metadataBase: new URL("https://spotbid.top"),
+  title: "SpotBid | Bid to rank. Get seen.",
   description:
-    "SpotBid is a live attention billboard and transparent bidding board. Claim high-visibility ad spots, outbid competitors, and showcase your startup or brand to global tech traffic.",
+    "The live attention leaderboard. Real-time bidding for public brand placement.",
   keywords: [
     "billboard ad space",
     "buy billboard ad online",
@@ -32,9 +33,8 @@ export const metadata: Metadata = {
   authors: [{ name: "SpotBid", url: "https://spotbid.top" }],
   creator: "SpotBid",
   publisher: "SpotBid",
-  metadataBase: new URL("https://spotbid.top"),
   alternates: {
-    canonical: "https://spotbid.top",
+    canonical: "https://spotbid.top/",
   },
   icons: {
     icon: "/icon.svg",
@@ -42,27 +42,33 @@ export const metadata: Metadata = {
     apple: "/icon.svg",
   },
   openGraph: {
-    title: "SpotBid | Bid to rank. Get seen.",
-    description: "The live attention billboard. Real-time bidding for public brand placement.",
-    url: "https://spotbid.top",
-    siteName: "SpotBid",
-    locale: "en_US",
     type: "website",
+    url: "https://spotbid.top/",
+    siteName: "SpotBid",
+    title: "SpotBid | Bid to rank. Get seen.",
+    description:
+      "The live attention leaderboard. Real-time bidding for public brand placement.",
     images: [
       {
-        url: "https://spotbid.top/og-image.png",
+        url: "https://spotbid.top/social-card.png",
         width: 1200,
         height: 630,
-        alt: "SpotBid | Bid to rank. Get seen.",
+        alt: "SpotBid - The Live Attention Billboard",
+        type: "image/png",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
     title: "SpotBid | Bid to rank. Get seen.",
-    description: "The live attention billboard. Real-time bidding for public brand placement.",
-    images: ["https://spotbid.top/og-image.png"],
-    creator: "@spotbid",
+    description:
+      "The live attention leaderboard. Real-time bidding for public brand placement.",
+    images: [
+      {
+        url: "https://spotbid.top/social-card.png",
+        alt: "SpotBid - The Live Attention Billboard",
+      },
+    ],
   },
   robots: {
     index: true,
@@ -83,40 +89,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     "@type": "WebSite",
     name: "SpotBid",
     url: "https://spotbid.top",
-    description: "The live attention billboard. Real-time bidding for public brand placement.",
-    potentialAction: {
-      "@type": "SearchAction",
-      target: "https://spotbid.top/?q={search_term_string}",
-      "query-input": "required name=search_term_string",
-    },
+    description:
+      "The live attention leaderboard. Real-time bidding for public brand placement.",
   };
 
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}>
       <head>
-        {/* Canonical Link */}
-        <link rel="canonical" href="https://spotbid.top" />
-
-        {/* Explicit OpenGraph & Twitter Card Meta Tags */}
-        <meta property="og:title" content="SpotBid | Bid to rank. Get seen." />
-        <meta
-          property="og:description"
-          content="The live attention leaderboard. Real-time bidding for public brand placement."
-        />
-        <meta property="og:image" content="https://spotbid.top/og-image.png" />
-        <meta property="og:url" content="https://spotbid.top" />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="SpotBid" />
-
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="SpotBid | Bid to rank. Get seen." />
-        <meta
-          name="twitter:description"
-          content="The live attention leaderboard. Real-time bidding for public brand placement."
-        />
-        <meta name="twitter:image" content="https://spotbid.top/og-image.png" />
-
-        {/* Structured Data (JSON-LD) for Search Engines */}
+        {/* Structured Data (JSON-LD) */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
