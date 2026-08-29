@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Spot, formatCurrency } from '@/lib/types';
-import { getAutoLogoUrl } from '@/lib/logo';
+import { getAutoLogoUrl, getAutoLogoFallbacks } from '@/lib/logo';
 import { getNextSpotPriceDollars } from '@/lib/pricing';
 
 interface BidModalProps {
@@ -19,6 +19,8 @@ export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
   const [email, setEmail] = useState('');
   const [url, setUrl] = useState('');
   const [autoLogo, setAutoLogo] = useState<string | null>(null);
+  const [logoFallbacks, setLogoFallbacks] = useState<string[]>([]);
+  const fallbackIndexRef = useRef(0);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [customPreview, setCustomPreview] = useState<string | null>(null);
   const [showManualUpload, setShowManualUpload] = useState(false);
@@ -36,16 +38,28 @@ export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
 
   // Auto-detect logo as user types URL or brand/handle
   useEffect(() => {
+    fallbackIndexRef.current = 0;
     if (url.trim()) {
-      const detected = getAutoLogoUrl(url);
-      setAutoLogo(detected);
+      setAutoLogo(getAutoLogoUrl(url));
+      setLogoFallbacks(getAutoLogoFallbacks(url));
     } else if (name.trim() && (name.includes('.') || name.startsWith('@'))) {
-      const detected = getAutoLogoUrl(name);
-      setAutoLogo(detected);
+      setAutoLogo(getAutoLogoUrl(name));
+      setLogoFallbacks(getAutoLogoFallbacks(name));
+    } else {
+      setAutoLogo(null);
+      setLogoFallbacks([]);
+    }
+  }, [url, name]);
+
+  // When the logo image fails to load, try the next fallback
+  const handleLogoError = () => {
+    fallbackIndexRef.current += 1;
+    if (fallbackIndexRef.current < logoFallbacks.length) {
+      setAutoLogo(logoFallbacks[fallbackIndexRef.current]);
     } else {
       setAutoLogo(null);
     }
-  }, [url, name]);
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -237,7 +251,7 @@ export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
                     src={activeLogoUrl}
                     alt="Logo Preview"
                     className="max-h-full max-w-full object-contain rounded"
-                    onError={() => setAutoLogo(null)}
+                    onError={handleLogoError}
                   />
                 </div>
                 <div className="min-w-0">

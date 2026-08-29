@@ -60,6 +60,9 @@ export default function SpotCard({ spot, className = '', onClick }: SpotCardProp
                 src={spot.logo_url}
                 alt={spot.bidder_name || ''}
                 className="max-h-full max-w-full object-contain rounded-lg"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(spot.bidder_name || 'Spot')}&background=10b981&color=fff&size=128&bold=true&format=png`;
+                }}
               />
             </div>
             {isBanner && (
