@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   title: "SpotBid | Bid to rank. Get seen.",
   description:
     "The live attention leaderboard. Bid to secure high-visibility spots on the public board. When someone outbids you, you get replaced.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  metadataBase: new URL("https://spotbid.top"),
   icons: {
     icon: "/icon.svg",
     shortcut: "/icon.svg",
@@ -30,11 +30,20 @@ export const metadata: Metadata = {
     siteName: "SpotBid",
     locale: "en",
     type: "website",
+    images: [
+      {
+        url: "https://spotbid.top/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "SpotBid | Bid to rank. Get seen.",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "SpotBid | Bid to rank. Get seen.",
     description: "The live attention leaderboard. Real-time bidding for public brand placement.",
+    images: ["https://spotbid.top/og-image.png"],
   },
 };
 

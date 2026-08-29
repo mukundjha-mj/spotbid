@@ -6,11 +6,16 @@ import BidHistory from '@/components/BidHistory';
 import HowItWorks from '@/components/HowItWorks';
 import FAQ from '@/components/FAQ';
 import Footer from '@/components/Footer';
+import ComingSoon from '@/components/ComingSoon';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function Home() {
+  if (process.env.NEXT_PUBLIC_COMING_SOON === 'true') {
+    return <ComingSoon />;
+  }
+
   const [spots, config, bids] = await Promise.all([
     getSpots(),
     getAuctionConfig(),
