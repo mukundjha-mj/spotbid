@@ -5,10 +5,11 @@ import { getNextSpotPriceCents } from '@/lib/pricing';
 
 interface SpotCardProps {
   spot: Spot;
+  className?: string;
   onClick: () => void;
 }
 
-export default function SpotCard({ spot, onClick }: SpotCardProps) {
+export default function SpotCard({ spot, className = '', onClick }: SpotCardProps) {
   const isTaken = spot.current_bid > 0;
   const isCenterStage = spot.id === 6;
   const isBanner = spot.tier === 'large' || spot.tier === 'medium' || (spot.grid_col && spot.grid_col.includes('span 2')) || (spot.grid_col && spot.grid_col.includes('span 3'));
@@ -29,17 +30,15 @@ export default function SpotCard({ spot, onClick }: SpotCardProps) {
             : 'border-zinc-200/90 shadow-xs hover:border-black hover:shadow-md'
         }
         focus-visible:outline-2 focus-visible:outline-black
-        min-h-[92px] sm:min-h-[105px] text-left cursor-pointer p-2 sm:p-2.5
+        min-h-[88px] sm:min-h-[105px] text-left cursor-pointer p-2 sm:p-2.5
+        ${className}
       `}
-      style={{
-        gridColumn: spot.grid_col,
-      }}
     >
       {/* Top Header Tag */}
-      <div className="flex w-full items-center justify-between text-[10px] font-mono leading-none">
-        <span className="text-zinc-400 font-bold">#{spot.id.toString().padStart(2, '0')}</span>
+      <div className="flex w-full items-center justify-between text-[10px] sm:text-xs font-mono leading-none gap-1">
+        <span className="text-zinc-400 font-bold shrink-0">#{spot.id.toString().padStart(2, '0')}</span>
         <span
-          className={`px-1.5 py-0.5 rounded text-[9px] font-mono uppercase tracking-wider ${
+          className={`px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-mono uppercase tracking-wider font-bold shrink-0 whitespace-nowrap ${
             isCenterStage && !isTaken
               ? 'bg-emerald-100 text-emerald-900 font-bold border border-emerald-300'
               : isTaken
@@ -109,12 +108,12 @@ export default function SpotCard({ spot, onClick }: SpotCardProps) {
       </div>
 
       {/* Bottom Price Bar */}
-      <div className="flex w-full items-center justify-between text-[11px] font-mono transition-all duration-150 group-hover:opacity-10 border-t border-zinc-100 pt-1.5 leading-none">
-        <span className="truncate text-zinc-400 text-[10px] max-w-[55%]">
+      <div className="flex w-full items-center justify-between text-[10px] sm:text-[11px] font-mono transition-all duration-150 group-hover:opacity-10 border-t border-zinc-100 pt-1.5 leading-none">
+        <span className="truncate text-zinc-400 text-[9px] sm:text-[10px] max-w-[55%]">
           {isTaken ? (!isBanner ? spot.bidder_name : 'Current') : 'Fixed'}
         </span>
         <span
-          className={`font-bold tabular-nums ${
+          className={`font-bold tabular-nums text-[10px] sm:text-[11px] ${
             isTaken ? 'text-emerald-600 font-extrabold' : isCenterStage ? 'text-emerald-700 font-extrabold' : 'text-zinc-900'
           }`}
         >
