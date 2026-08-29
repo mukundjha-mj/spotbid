@@ -12,7 +12,6 @@ interface BidModalProps {
 }
 
 export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
-  // BrandMyMac +70% Upgrade Mechanic: Fixed non-editable price
   const requiredPriceDollars = getNextSpotPriceDollars(spot);
   const isTaken = spot.current_bid > 0;
 
@@ -100,7 +99,7 @@ export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to place bid');
+        throw new Error(data.error || 'Checkout is temporarily unavailable. Please try again.');
       }
 
       if (data.checkout_url) {
@@ -111,7 +110,7 @@ export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
         window.location.reload();
       }
     } catch (err: any) {
-      setError(err.message || 'Something went wrong');
+      setError(err.message || 'Unable to connect to checkout. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -163,8 +162,8 @@ export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
         </div>
 
         {error && (
-          <div className="mb-4 rounded-lg bg-rose-50 border border-rose-200 p-2.5 text-xs font-mono text-rose-700">
-            [ERROR] {error}
+          <div className="mb-4 rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700 font-medium">
+            {error}
           </div>
         )}
 

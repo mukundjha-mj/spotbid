@@ -15,12 +15,12 @@ export async function POST(req: NextRequest) {
     const clientAutoLogo = formData.get('auto_logo_url') as string | null;
 
     if (!spotId || !bidderName || !bidderEmail) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      return NextResponse.json({ error: 'Please provide all required fields.' }, { status: 400 });
     }
 
     const spot = await getSpot(spotId);
     if (!spot) {
-      return NextResponse.json({ error: 'Spot not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Spot not found. Please refresh and try again.' }, { status: 404 });
     }
 
     // Exact BrandMyMac fixed price (+70% takeover or base price)
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       logoUrl = getAutoLogoUrl(bidderUrl) || spot.logo_url;
     }
 
-    // Create Bid record with pending status (NEVER update spot until webhook confirms payment)
+    // Create Bid record with pending status
     const bid = await createBid({
       spot_id: spotId,
       bidder_name: bidderName,
@@ -72,7 +72,12 @@ export async function POST(req: NextRequest) {
       checkout_url: paymentUrl,
     });
   } catch (error: any) {
-    console.error('Bid creation error:', error);
-    return NextResponse.json({ error: error.message || 'Payment initiation failed' }, { status: 500 });
+    console.error('[Bid API Error]:', error);
+
+    // Return clean user-friendly customer messages without leaking code/env names
+    return NextResponse.json(
+      { error: 'Payment gateway temporarily unavailable. Please try again in a moment.' },
+      { status: 500 }
+    );
   }
 }
