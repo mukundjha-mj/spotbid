@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSpot, createBid, updateSpot, uploadLogo, getAuctionConfig, updateAuctionConfig } from '@/lib/supabase';
+import { getSpot, createBid, uploadLogo } from '@/lib/supabase';
 import { createDodoPayment } from '@/lib/dodo';
-import { createPolarCheckout } from '@/lib/polar';
-import { checkAntiSnipe } from '@/lib/anti-snipe';
-import { sendBidConfirmation, sendOutbidNotification } from '@/lib/resend';
 import { getAutoLogoUrl } from '@/lib/logo';
 import { getNextSpotPriceCents } from '@/lib/pricing';
 
@@ -44,7 +41,7 @@ export async function POST(req: NextRequest) {
       logoUrl = getAutoLogoUrl(bidderUrl) || spot.logo_url;
     }
 
-    // Create Bid record with exact fixed price
+    // Create Bid record with pending status (NEVER update spot until webhook confirms payment)
     const bid = await createBid({
       spot_id: spotId,
       bidder_name: bidderName,
@@ -56,95 +53,26 @@ export async function POST(req: NextRequest) {
       stripe_session_id: null,
     });
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spotbid.top';
     const successUrl = `${appUrl}/success?spot_id=${spotId}&bid_id=${bid.id}`;
 
-    // 1. Primary: Dodo Payments (Global Cards, Apple Pay, Indian INR direct bank settlement)
-    if (process.env.DODO_PAYMENTS_API_KEY) {
-      const paymentUrl = await createDodoPayment({
-        bidId: bid.id,
-        spotLabel: `Spot #${spot.id} (${spot.label.replace(/—|–/g, '/')})`,
-        amountCents: exactRequiredCents,
-        bidderEmail,
-        bidderName,
-        successUrl,
-      });
-
-      return NextResponse.json({
-        success: true,
-        bid,
-        checkout_url: paymentUrl,
-      });
-    }
-
-    // 2. Secondary: Polar Checkout (if configured)
-    if (process.env.POLAR_ACCESS_TOKEN) {
-      const polarUrl = await createPolarCheckout({
-        bidId: bid.id,
-        spotLabel: `Spot #${spot.id} (${spot.label.replace(/—|–/g, '/')})`,
-        amount: exactRequiredCents,
-        bidderEmail,
-        successUrl,
-      });
-
-      return NextResponse.json({
-        success: true,
-        bid,
-        checkout_url: polarUrl,
-      });
-    }
-
-    // 3. Fallback: Direct Mock Mode (Instant placement for testing)
-    const oldBidder = {
-      email: spot.bidder_email,
-      name: spot.bidder_name,
-      amount: spot.current_bid,
-    };
-
-    await updateSpot(spotId, {
-      current_bid: exactRequiredCents,
-      bidder_name: bidderName,
-      bidder_email: bidderEmail,
-      bidder_url: bidderUrl,
-      logo_url: logoUrl,
-      bid_count: spot.bid_count + 1,
+    // Create Dodo Payments Checkout Session
+    const paymentUrl = await createDodoPayment({
+      bidId: bid.id,
+      spotLabel: `Spot #${spot.id} (${spot.label.replace(/—|–/g, '/')})`,
+      amountCents: exactRequiredCents,
+      bidderEmail,
+      bidderName,
+      successUrl,
     });
-
-    const config = await getAuctionConfig();
-    await updateAuctionConfig({
-      total_raised: config.total_raised + exactRequiredCents - spot.current_bid,
-    });
-
-    await checkAntiSnipe();
-
-    // Send confirmation email via Resend
-    await sendBidConfirmation({
-      email: bidderEmail,
-      name: bidderName,
-      spotLabel: spot.label.replace(/—|–/g, '/'),
-      amount: exactRequiredCents,
-    });
-
-    // Send outbid alert if someone was replaced
-    if (oldBidder.email && oldBidder.name && oldBidder.amount > 0) {
-      await sendOutbidNotification({
-        email: oldBidder.email,
-        name: oldBidder.name,
-        spotLabel: spot.label.replace(/—|–/g, '/'),
-        oldAmount: oldBidder.amount,
-        newAmount: exactRequiredCents,
-        newBidderName: bidderName,
-      });
-    }
 
     return NextResponse.json({
       success: true,
       bid,
-      checkout_url: null,
-      message: 'Bid placed in test mode',
+      checkout_url: paymentUrl,
     });
   } catch (error: any) {
     console.error('Bid creation error:', error);
-    return NextResponse.json({ error: error.message || 'Internal error' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Payment initiation failed' }, { status: 500 });
   }
 }
