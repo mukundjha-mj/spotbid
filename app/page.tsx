@@ -31,7 +31,6 @@ export default async function Home() {
       <HeroSection
         totalRaised={totalRaised}
         fundingGoal={config.funding_goal}
-        endsAt={config.ends_at}
         spotsTaken={spots.filter((s) => s.current_bid > 0).length}
         totalSpots={spots.length}
       />

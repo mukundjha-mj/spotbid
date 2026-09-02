@@ -1,12 +1,10 @@
 'use client';
 
 import { formatCurrency } from '@/lib/types';
-import AuctionTimer from './AuctionTimer';
 
 interface HeroSectionProps {
   totalRaised: number;
   fundingGoal: number;
-  endsAt: string;
   spotsTaken: number;
   totalSpots: number;
 }
@@ -14,7 +12,6 @@ interface HeroSectionProps {
 export default function HeroSection({
   totalRaised,
   fundingGoal,
-  endsAt,
   spotsTaken,
   totalSpots,
 }: HeroSectionProps) {
@@ -72,10 +69,6 @@ export default function HeroSection({
         </div>
       </div>
 
-      {/* Countdown Timer */}
-      <div className="mt-5">
-        <AuctionTimer endsAt={endsAt} />
-      </div>
 
       {/* Action Buttons */}
       <div className="mt-7 flex items-center justify-center gap-3">
