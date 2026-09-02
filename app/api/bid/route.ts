@@ -14,6 +14,10 @@ export async function POST(req: NextRequest) {
     const logoFile = formData.get('logo') as File | null;
     const clientAutoLogo = formData.get('auto_logo_url') as string | null;
 
+    const utmSource = formData.get('utm_source') as string | null;
+    const utmMedium = formData.get('utm_medium') as string | null;
+    const utmCampaign = formData.get('utm_campaign') as string | null;
+
     if (!spotId || !bidderName || !bidderEmail) {
       return NextResponse.json({ error: 'Please provide all required fields.' }, { status: 400 });
     }
@@ -51,6 +55,9 @@ export async function POST(req: NextRequest) {
       logo_path: logoUrl,
       status: 'pending',
       stripe_session_id: null,
+      utm_source: utmSource,
+      utm_medium: utmMedium,
+      utm_campaign: utmCampaign,
     });
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spotbid.top';

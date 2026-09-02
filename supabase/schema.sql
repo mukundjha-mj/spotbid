@@ -33,6 +33,9 @@ CREATE TABLE IF NOT EXISTS public.bids (
   logo_path         TEXT,
   status            TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'outbid', 'refunded')),
   stripe_session_id TEXT,
+  utm_source        TEXT,
+  utm_medium        TEXT,
+  utm_campaign      TEXT,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

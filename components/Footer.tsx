@@ -56,9 +56,6 @@ export default function Footer() {
           </a>
         </div>
 
-        <div className="text-zinc-400">
-          POWERED BY POLAR & SUPABASE
-        </div>
       </div>
     </footer>
   );

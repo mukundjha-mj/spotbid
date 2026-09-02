@@ -105,6 +105,14 @@ export default function BidModal({ spot, onClose, onSuccess }: BidModalProps) {
         formData.append('auto_logo_url', autoLogo);
       }
 
+      const utmSource = sessionStorage.getItem('utm_source');
+      const utmMedium = sessionStorage.getItem('utm_medium');
+      const utmCampaign = sessionStorage.getItem('utm_campaign');
+
+      if (utmSource) formData.append('utm_source', utmSource);
+      if (utmMedium) formData.append('utm_medium', utmMedium);
+      if (utmCampaign) formData.append('utm_campaign', utmCampaign);
+
       const res = await fetch('/api/bid', {
         method: 'POST',
         body: formData,

@@ -33,6 +33,9 @@ export interface Bid {
   created_at: string;
   spot_label?: string;
   spot_tier?: SpotTier;
+  utm_source?: string | null;
+  utm_medium?: string | null;
+  utm_campaign?: string | null;
 }
 
 export interface AuctionConfig {

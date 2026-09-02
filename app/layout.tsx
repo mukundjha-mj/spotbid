@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
+import { Suspense } from "react";
+import UTMTracker from "@/components/UTMTracker";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -128,6 +130,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </Script>
       </head>
       <body className="min-h-full flex flex-col bg-white text-zinc-900 font-sans selection:bg-black selection:text-white">
+        <Suspense fallback={null}>
+          <UTMTracker />
+        </Suspense>
         {children}
       </body>
     </html>
